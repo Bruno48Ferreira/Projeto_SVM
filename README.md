@@ -8,18 +8,25 @@ Os dados utilizados foram preparados a partir das séries históricas da
 Agência Nacional de Águas e Saneamento Básico (ANA), gerando o arquivo
 `data/agua_iqa.csv` com as colunas de entrada e a classe alvo.
 
-> **Obs.:** este repositório contém a versão em linha de comando, sem a interface gráfica.
-
----
 
 ## Estrutura do projeto
 
 ```text
 Projeto_SVM/
 ├─ data/
-│  └─ agua_iqa.csv           # dataset final usado no treinamento
-└─ src/
-   └─ main.py                # script principal com todo o pipeline
+│  └─ raw/
+│     └─ agua_iqa.csv                # dataset final usado no treinamento
+├─ imgs/
+│  ├─ Figure_1_Matriz_Validacao_Linear.png
+│  ├─ Figure_2_Matriz_Validacao_RBF.png
+│  ├─ Figure_3_Matriz_Teste_RBF.png
+│  ├─ Figure_4_Metricas_Validacao_Linear.png
+│  ├─ Figure_5_Metricas_Validacao_RBF.png
+│  └─ Figure_6_Metricas_Validacao_Teste_RBF.png
+├─ src/
+│  └─ build_dataset.py               # script opcional para gerar o agua_iqa.csv
+├─ Artigo_SVM.pdf                    # artigo escrito com base neste projeto
+└─ Qualidade_Agua_SVM.py             # script principal (pipeline SVM)
 
 
 No código, o arquivo é referenciado pela constante DATA_PATH.
