@@ -16,7 +16,7 @@ Projeto_SVM/
 ├─ data/
 │  └─ raw/
 │     └─ agua_iqa.csv                # dataset final usado no treinamento
-├─ imgs/
+├─ imgs/                             # Imagens refentes aos gráficos e matrizes gerados pelo algoritmo
 │  ├─ Figure_1_Matriz_Validacao_Linear.png
 │  ├─ Figure_2_Matriz_Validacao_RBF.png
 │  ├─ Figure_3_Matriz_Teste_RBF.png
