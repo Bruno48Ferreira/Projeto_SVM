@@ -15,7 +15,6 @@ Agência Nacional de Águas e Saneamento Básico (ANA), gerando o arquivo
 
 ## Estrutura do projeto
 
-```text
 Projeto_SVM/
 ├─ data/
 │  └─ raw/
