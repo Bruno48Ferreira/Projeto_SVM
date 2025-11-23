@@ -6,7 +6,7 @@ de parâmetros físico-químicos que compõem o Índice de Qualidade da Água (I
 
 Os dados utilizados foram preparados a partir das séries históricas da
 Agência Nacional de Águas e Saneamento Básico (ANA), gerando o arquivo
-`data/agua_iqa.csv` com as colunas de entrada e a classe alvo.
+`data/raw/agua_iqa.csv` com as colunas de entrada e a classe alvo.
 
 
 ## Estrutura do projeto
