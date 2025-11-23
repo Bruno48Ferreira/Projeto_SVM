@@ -1,3 +1,4 @@
+````markdown
 # Projeto SVM – Previsão da Qualidade da Água
 
 Este projeto implementa um modelo de **Máquinas de Vetores de Suporte (SVM)** para
@@ -8,6 +9,9 @@ Os dados utilizados foram preparados a partir das séries históricas da
 Agência Nacional de Águas e Saneamento Básico (ANA), gerando o arquivo
 `data/raw/agua_iqa.csv` com as colunas de entrada e a classe alvo.
 
+> **Obs.:** este repositório contém a versão em linha de comando, sem a interface gráfica.
+
+---
 
 ## Estrutura do projeto
 
@@ -16,7 +20,7 @@ Projeto_SVM/
 ├─ data/
 │  └─ raw/
 │     └─ agua_iqa.csv                # dataset final usado no treinamento
-├─ imgs/                             # Imagens refentes aos gráficos e matrizes gerados pelo algoritmo
+├─ imgs/                             # imanges referentes aos gráficos gerados após treinamento
 │  ├─ Figure_1_Matriz_Validacao_Linear.png
 │  ├─ Figure_2_Matriz_Validacao_RBF.png
 │  ├─ Figure_3_Matriz_Teste_RBF.png
@@ -27,288 +31,187 @@ Projeto_SVM/
 │  └─ build_dataset.py               # script opcional para gerar o agua_iqa.csv
 ├─ Artigo_SVM.pdf                    # artigo escrito com base neste projeto
 └─ Qualidade_Agua_SVM.py             # script principal (pipeline SVM)
+````
 
+No código, o arquivo de dados é referenciado pela constante `DATA_PATH`
+em `Qualidade_Agua_SVM.py`. Caso o caminho seja absoluto, é recomendável
+ajustá-lo para um caminho relativo apontando para `data/raw/agua_iqa.csv`.
 
-No código, o arquivo é referenciado pela constante DATA_PATH.
-Se necessário, ajuste esse caminho para o local correto do seu agua_iqa.csv.
+---
 
-Requisitos
+## Requisitos
 
-Python 3.10+ (recomendado)
+* Python 3.10+ (recomendado)
+* Bibliotecas:
 
-Bibliotecas:
-
+```bash
 pip install pandas numpy scikit-learn matplotlib seaborn
+```
 
-Como executar
+---
+
+## Como executar o modelo SVM
 
 Na raiz do projeto:
 
-cd src
-python main.py
-
+```bash
+python Qualidade_Agua_SVM.py
+```
 
 O script irá:
 
-Carregar e limpar o dataset.
+1. Carregar e limpar o dataset a partir de `DATA_PATH`.
+2. Dividir os dados em treino, validação e teste.
+3. Normalizar os atributos (escala [0, 1]).
+4. Treinar dois modelos SVM (kernel **linear** e **RBF**).
+5. Avaliar ambos na base de validação.
+6. Escolher automaticamente o melhor modelo (pela acurácia).
+7. Avaliar o melhor modelo na base de teste.
+8. Exibir:
 
-Dividir os dados em treino, validação e teste.
+   * Matrizes de confusão (validação e teste).
+   * Gráficos de precisão, recall e F1-score por classe.
+9. Realizar a previsão de uma **amostra de exemplo** e imprimir a classe prevista.
 
-Normalizar os atributos (escala [0, 1]).
+---
 
-Treinar dois modelos SVM (kernel linear e RBF).
+## Script de preparação do dataset (`src/build_dataset.py`)
 
-Avaliar ambos na base de validação.
+O arquivo `src/build_dataset.py` pode ser utilizado (ou adaptado) para
+construir o arquivo `data/raw/agua_iqa.csv` a partir dos arquivos brutos
+baixados do portal de dados abertos da ANA.
 
-Escolher automaticamente o melhor modelo (pela acurácia).
+Em resumo, ele:
 
-Avaliar o melhor modelo na base de teste.
+1. Lê os CSVs de indicadores (OD, fósforo total, turbidez, DBO, IQA etc.).
+2. Converte as séries históricas `MED_ano` para o formato “uma linha por estação/ano”.
+3. Faz o *merge* dos parâmetros com o IQA numérico.
+4. Converte o IQA para classes categóricas (ótima, boa, regular, ruim, péssima).
+5. Gera o arquivo consolidado `agua_iqa.csv`.
 
-Exibir:
+> Caso você já tenha `data/raw/agua_iqa.csv` pronto, não é obrigatório
+> executar o `build_dataset.py`.
 
-Matrizes de confusão (validação e teste).
+---
 
-Gráficos de precisão, recall e F1-score por classe.
+## Descrição das funções principais (`Qualidade_Agua_SVM.py`)
 
-Realizar a previsão de uma amostra de exemplo e imprimir a classe prevista.
-
-Pipeline do algoritmo
-
-Pré-processamento
-
-Carregamento do CSV.
-
-Remoção de linhas vazias ou com valores ausentes.
-
-Seleção das colunas de interesse (features + classe).
-
-Divisão dos dados
-
-70% treino, 15% validação, 15% teste (com estratificação por classe).
-
-Normalização
-
-Escala Min–Max para o intervalo [0, 1], ajustada apenas com os dados de treino.
-
-Treinamento
-
-SVM com kernel linear.
-
-SVM com kernel RBF.
-
-Avaliação
-
-Cálculo de acurácia, precisão, recall, F1-score.
-
-Matrizes de confusão e gráficos de métricas por classe.
-
-Previsão
-
-Função para prever a classe de uma nova amostra informada via dicionário Python.
-
-Descrição das funções (src/main.py)
-carregar_dados(caminho_csv: str) -> pd.DataFrame
+### `carregar_dados(caminho_csv: str) -> pd.DataFrame`
 
 Carrega o arquivo CSV contendo o dataset.
 
-Verifica se o arquivo existe.
+* Verifica se o arquivo existe.
+* Lê o CSV com `pandas.read_csv`.
+* Retorna um `DataFrame` com todos os dados originais.
 
-Lê o CSV com pandas.read_csv.
-
-Retorna um DataFrame com todos os dados originais.
-
-limpar_dados(df: pd.DataFrame) -> pd.DataFrame
+### `limpar_dados(df: pd.DataFrame) -> pd.DataFrame`
 
 Realiza a limpeza básica do dataset.
 
-Remove linhas totalmente vazias (dropna(how="all")).
+* Remove linhas totalmente vazias (`dropna(how="all")`).
+* Remove linhas com quaisquer valores ausentes.
+* Mantém apenas as colunas indicadas em `FEATURE_COLUMNS` e `TARGET_COLUMN`.
+* Retorna um `DataFrame` pronto para ser dividido em treino/validação/teste.
 
-Remove linhas com quaisquer valores ausentes.
-
-Mantém apenas as colunas indicadas em FEATURE_COLUMNS e TARGET_COLUMN.
-
-Retorna um DataFrame pronto para ser dividido em treino/validação/teste.
-
-dividir_dados(df: pd.DataFrame)
+### `dividir_dados(df: pd.DataFrame)`
 
 Separa o dataset em três subconjuntos:
 
-Entrada (X) = colunas em FEATURE_COLUMNS.
-
-Saída (y) = coluna TARGET_COLUMN.
+* Entrada (`X`) = colunas em `FEATURE_COLUMNS`.
+* Saída (`y`) = coluna `TARGET_COLUMN`.
 
 Passos:
 
-Primeira divisão:
+1. Primeira divisão:
 
-train_test_split com test_size=0.3 →
-70% treino (X_train, y_train) e 30% temporário (X_temp, y_temp).
+   * `train_test_split` com `test_size=0.3` →
+     70% **treino** (`X_train`, `y_train`) e 30% temporário (`X_temp`, `y_temp`).
+2. Segunda divisão:
 
-Segunda divisão:
-
-train_test_split em X_temp, y_temp com test_size=0.5 →
-15% validação (X_val, y_val) e 15% teste (X_test, y_test).
-
-Utiliza stratify para manter a proporção de classes.
+   * `train_test_split` em `X_temp`, `y_temp` com `test_size=0.5` →
+     15% **validação** (`X_val`, `y_val`) e 15% **teste** (`X_test`, `y_test`).
+3. Utiliza `stratify` para manter a proporção de classes.
 
 Retorna:
 
+```python
 X_train, X_val, X_test, y_train, y_val, y_test
+```
 
-normalizar_dados(X_train, X_val, X_test)
+### `normalizar_dados(X_train, X_val, X_test)`
 
 Aplica a normalização Min–Max ([0, 1]) em todas as features.
 
-Cria um MinMaxScaler(feature_range=(0, 1)).
+* Cria um `MinMaxScaler(feature_range=(0, 1))`.
+* Ajusta **apenas no treino**: `scaler.fit_transform(X_train)`.
+* Aplica a transformação em validação e teste: `scaler.transform(...)`.
+* Retorna os dados normalizados e o scaler para uso futuro:
 
-Ajusta apenas no treino: scaler.fit_transform(X_train).
-
-Aplica a transformação em validação e teste: scaler.transform(...).
-
-Retorna os dados normalizados e o scaler para uso futuro:
-
+```python
 X_train_scaled, X_val_scaled, X_test_scaled, scaler
+```
 
-treinar_svm(X_train, y_train, kernel="rbf", C=1.0, gamma="scale")
+### `treinar_svm(X_train, y_train, kernel="rbf", C=1.0, gamma="scale")`
 
 Treina um classificador SVM.
 
-Utiliza sklearn.svm.SVC.
+* Utiliza `sklearn.svm.SVC`.
+* Parâmetros:
 
-Parâmetros:
+  * `kernel`: tipo de kernel (`"linear"`, `"rbf"`, etc.).
+  * `C`: parâmetro de regularização.
+  * `gamma`: parâmetro do kernel RBF.
+* Ajusta o modelo com `.fit(X_train, y_train)`.
+* Retorna o modelo treinado.
 
-kernel: tipo de kernel ("linear", "rbf", etc.).
+### `plot_metricas_avaliacao(y_true, y_pred, labels, titulo="Métricas de Avaliação")`
 
-C: parâmetro de regularização.
+Gera o gráfico de barras com **precisão**, **recall** e **F1-score** por classe.
 
-gamma: parâmetro do kernel RBF.
+* Usa `classification_report(..., output_dict=True)` para extrair as métricas.
+* Para cada classe em `labels`, coleta:
 
-Ajusta o modelo com .fit(X_train, y_train).
+  * `precision`
+  * `recall`
+  * `f1-score`
+* Plota três barras por classe com `matplotlib`.
+* Configura e exibe o gráfico com `plt.show()`.
 
-Retorna o modelo treinado.
+### `plot_matriz_confusao(cm, labels, titulo="Matriz de Confusão")`
 
-plot_metricas_avaliacao(y_true, y_pred, labels, titulo="Métricas de Avaliação")
+Desenha uma matriz de confusão usando `seaborn.heatmap`.
 
-Gera o gráfico de barras com precisão, recall e F1-score por classe.
+* `cm`: matriz de confusão (gerada por `confusion_matrix`).
+* `labels`: lista de rótulos das classes, usada em `xticklabels` e `yticklabels`.
+* Adiciona títulos e rótulos de eixos (“Previsto” e “Real”).
+* Exibe o gráfico com `plt.show()`.
 
-Usa classification_report(..., output_dict=True) para extrair as métricas.
-
-Para cada classe em labels, coleta:
-
-precision
-
-recall
-
-f1-score
-
-Plota três barras por classe com matplotlib:
-
-Azul: Precisão
-
-Laranja: Recall
-
-Verde: F1-score
-
-Configura e exibe o gráfico com plt.show().
-
-plot_matriz_confusao(cm, labels, titulo="Matriz de Confusão")
-
-Desenha uma matriz de confusão usando seaborn.heatmap.
-
-cm: matriz de confusão (gerada por confusion_matrix).
-
-labels: lista de rótulos das classes, usada em xticklabels e yticklabels.
-
-Adiciona títulos e rótulos de eixos (“Previsto” e “Real”).
-
-Exibe o gráfico com plt.show().
-
-avaliar_modelo(model, X, y, conjunto="Teste") -> float
+### `avaliar_modelo(model, X, y, conjunto="Teste") -> float`
 
 Avalia um modelo SVM em um conjunto específico (treino, validação ou teste).
 
-Passos:
+1. Calcula as predições: `y_pred = model.predict(X)`.
+2. Calcula a acurácia com `accuracy_score(y, y_pred)`.
+3. Imprime no terminal:
 
-Calcula as predições: y_pred = model.predict(X).
+   * Acurácia.
+   * Relatório de classificação.
+4. Gera:
 
-Calcula a acurácia com accuracy_score(y, y_pred).
+   * Matriz de confusão e gráfico.
+   * Gráfico de métricas.
+5. Retorna a acurácia.
 
-Imprime no terminal:
+### `prever_qualidade(model, scaler, nova_amostra: dict)`
 
-Acurácia.
+Faz a previsão da classe de qualidade da água para uma nova amostra.
 
-Relatório de classificação (classification_report).
+### `main()`
 
-Gera:
+Orquestra todo o pipeline:
 
-Matriz de confusão (confusion_matrix) e chama plot_matriz_confusao.
-
-Gráfico de métricas chamando plot_metricas_avaliacao.
-
-Retorna a acurácia (float).
-
-É usada para comparar SVM linear e RBF na validação e avaliar o modelo escolhido no teste.
-
-prever_qualidade(model, scaler, nova_amostra: dict)
-
-Realiza a previsão da classe de qualidade da água para uma nova amostra.
-
-nova_amostra deve ser um dicionário com todas as features:
-
-{
-    "oxigenio_dissolvido": ...,
-    "coliformes_termotolerantes": ...,
-    "pH": ...,
-    "temperatura_agua": ...,
-    "nitrogenio_total": ...,
-    "fosforo_total": ...,
-    "turbidez": ...,
-    "solidos_totais": ...
-}
-
-
-Passos:
-
-Constrói um vetor na ordem de FEATURE_COLUMNS.
-
-Aplica o mesmo scaler treinado (scaler.transform).
-
-Usa model.predict para obter a classe.
-
-Retorna a string da classe prevista (ex.: "boa", "ruim").
-
-main()
-
-Função principal que orquestra todo o pipeline:
-
-Carrega e imprime o shape inicial do dataset.
-
-Limpa os dados e imprime o shape após limpeza.
-
-Divide em treino/validação/teste.
-
-Normaliza os dados.
-
-Treina:
-
-SVM Linear → svm_linear
-
-SVM RBF → svm_rbf
-
-Avalia ambos na validação:
-
-acc_linear = avaliar_modelo(... "Validação (Linear)")
-
-acc_rbf = avaliar_modelo(... "Validação (RBF)")
-
-Compara as acurácias:
-
-Seleciona automaticamente o melhor modelo.
-
-Avalia o melhor modelo no conjunto de teste:
-
-avaliar_modelo(melhor_modelo, X_test_s, y_test, ...)
-
-Define uma amostra de exemplo no código e chama prever_qualidade:
-
-Imprime no terminal a classe prevista para essa amostra.
+* Carrega, limpa, divide, normaliza.
+* Treina SVM linear e RBF.
+* Compara na validação e escolhe o melhor.
+* Avalia no teste.
+* Faz uma previsão de exemplo.
